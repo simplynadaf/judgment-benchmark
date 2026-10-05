@@ -361,7 +361,7 @@ def judgment_case(llm, scenario: dict, reasoning: str = "none") -> dict:
 
 # %%
 # ---------------------------------------------------------------------------
-# Main benchmark task: run every scenario, return the RESTRAINT RATE (leaderboard metric).
+# Main benchmark task: run every scenario, return BALANCED ACCURACY (leaderboard metric).
 # ---------------------------------------------------------------------------
 @kbench.task(name="judgment")
 def judgment(llm, reasoning: str = "none") -> float:

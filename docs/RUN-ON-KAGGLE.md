@@ -71,8 +71,18 @@ make charts        # writes docs/charts/{leaderboard,arms,archetypes,category,co
 ```bash
 kaggle b t publish judgment     # makes the task + backing notebook public
 ```
-Confirm it is public (HTTP 200 unauthenticated) and copy the URL. That link is MANDATORY
-in the Dev.to post.
+
+### IMPORTANT: assemble a NAMED BENCHMARK, not just a task
+The challenge requires a link to "the benchmark on Kaggle." `publish` makes the TASK public
+(URL: /benchmarks/tasks/<user>/judgment). The strongest, most credible artifact is a NAMED
+BENCHMARK that GROUPS the task(s) and shows one leaderboard, like the top submissions
+(URL: /benchmarks/<user>/<benchmark-slug>). There is no CLI command for this; assemble it in
+the Kaggle WEB UI:
+  1. Go to kaggle.com/benchmarks, create a benchmark named "The Judgment Benchmark".
+  2. Add the published `judgment` task to it; make the benchmark PUBLIC.
+  3. Copy the /benchmarks/<user>/<slug> URL. Confirm it returns HTTP 200 unauthenticated.
+That benchmark URL (not the bare task URL) is the one to put in the Dev.to post.
+```
 
 ## 7. Send back / finalize
 1. The output of `kaggle b t models` (lineup check).
