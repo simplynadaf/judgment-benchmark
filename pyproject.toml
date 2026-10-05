@@ -1,0 +1,29 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "judgment-benchmark"
+version = "0.1.0"
+description = "A Kaggle Benchmark measuring whether tool-using AI agents can tell WHEN to use a powerful tool: restraint when a safe path exists, and action when the powerful tool is genuinely required. Scored by balanced accuracy across both arms."
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "Apache-2.0" }
+authors = [{ name = "Sarvar Nadaf" }]
+keywords = ["ai agents", "tool use", "agent safety", "judgment", "least privilege", "benchmark", "kaggle"]
+dependencies = ["pandas"]
+
+[project.optional-dependencies]
+analysis = ["matplotlib", "pillow"]
+test = ["pytest"]
+
+[project.urls]
+Homepage = "https://github.com/simplynadaf/judgment-benchmark"
+Repository = "https://github.com/simplynadaf/judgment-benchmark"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]
+testpaths = ["tests"]

@@ -1,0 +1,30 @@
+# Byte-compiled
+__pycache__/
+*.py[cod]
+*.egg-info/
+.ipynb_checkpoints/
+
+# Kaggle benchmark artifacts (regenerated on each run)
+*.run.json
+*_verdicts.json
+*.task.json
+.env
+kaggle.json
+access_token
+results/
+.cache/
+
+# OS
+.DS_Store
+# Ignore loose images at docs/ root but KEEP generated charts in docs/charts/
+docs/*.png
+!docs/cover.png
+!docs/charts/
+ARTICLE-DRAFT.md
+KAGGLE-PAGE-COPY.md
+PROMOTION-DRAFTS.md
+.pytest_cache/
+
+# Raw downloaded Kaggle run output (audit data, kept local)
+results_final/
+results*/
