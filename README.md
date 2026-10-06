@@ -9,7 +9,7 @@ Measured together, so neither reflex can fake it.
 
 [![CI](https://github.com/simplynadaf/judgment-benchmark/actions/workflows/ci.yml/badge.svg)](https://github.com/simplynadaf/judgment-benchmark/actions/workflows/ci.yml)
 [![License: Apache 2.0](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](LICENSE)
-[![Kaggle Benchmark](https://img.shields.io/badge/Kaggle-Benchmark-20BEFF.svg)](https://www.kaggle.com/benchmarks)
+[![Kaggle Benchmark](https://img.shields.io/badge/Kaggle-Benchmark-20BEFF.svg)](https://www.kaggle.com/benchmarks/tasks/sarvarnadaf/judgment)
 [![No LLM Judge](https://img.shields.io/badge/grading-deterministic-16A34A.svg)](#how-grading-works-no-llm-judge)
 
 </div>
@@ -117,14 +117,19 @@ the two-arm design buys, and it is asserted in CI on every push.
 
 ## Results
 
-> Populated after the Kaggle run. Charts regenerate from `results/results.json` via
-> `make charts`.
+First public run: **9 models graded** across Anthropic, Google and OpenAI (84 scenarios each),
+plus 2 reported as coverage gaps. The headline: three models scored a perfect **1.00**
+(Claude Haiku 4.5, Claude Sonnet 4.5, Gemini 3.7 Flash), while the most expensive model, **Claude
+Opus 5, came last at 0.62** by freezing on 32 of 42 jobs it was authorized to do. **Zero models
+over-reached** to a destructive tool on any scenario. Charts regenerate from
+`results/results.json` via `make charts`.
 
 ![Leaderboard](docs/charts/leaderboard.png)
 ![Restraint vs action](docs/charts/arms.png)
 ![Two ways to fail](docs/charts/archetypes.png)
 
-**Kaggle benchmark (public):** `[added on publish]`
+**Kaggle benchmark (public):** https://www.kaggle.com/benchmarks/tasks/sarvarnadaf/judgment
+**Write-up:** `[added on publish]`
 
 ---
 
