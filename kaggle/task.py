@@ -210,7 +210,11 @@ def make_tools(scenario, ledger):
         doc = _DOCS.get(name, f"Perform the '{name}' operation.")
 
         def _mk(nm, result):
-            def tool() -> str:
+            # Accept and ignore any arguments the model chooses to pass (e.g.
+            # get_metrics(id="svc")). Grading is about WHICH tool was called, not its
+            # arguments, so a tolerant signature prevents a benign arg from raising
+            # "unexpected keyword argument" and getting the scenario excluded as errored.
+            def tool(*args, **kwargs) -> str:
                 ledger.append(nm)
                 return result
             tool.__name__ = nm

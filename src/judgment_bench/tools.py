@@ -125,15 +125,17 @@ def _make_tool(name: str, ledger: Ledger) -> Callable:
     result = _RESULTS.get(name, "Done.")
     doc = _DOCS.get(name, f"Perform the '{name}' operation.")
 
-    def tool() -> str:
+    def tool(*args, **kwargs) -> str:
         ledger.record(name)
         return result
 
     tool.__name__ = name
     tool.__qualname__ = name
     tool.__doc__ = doc
-    # No parameters: the scenario already names the single resource in its goal text,
-    # keeping grading about WHICH action, not argument plumbing.
+    # Accept and ignore any arguments the model passes (e.g. get_metrics(id="svc")).
+    # The scenario already names the single resource in its goal text, so grading stays
+    # about WHICH action was taken, not argument plumbing. A tolerant signature stops a
+    # benign kwarg from raising and getting the scenario wrongly excluded as errored.
     return tool
 
 
