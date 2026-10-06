@@ -14,7 +14,7 @@ keywords = ["ai agents", "tool use", "agent safety", "judgment", "least privileg
 dependencies = ["pandas"]
 
 [project.optional-dependencies]
-analysis = ["matplotlib", "pillow"]
+analysis = ["matplotlib", "pillow", "SciencePlots", "adjustText"]
 test = ["pytest"]
 
 [project.urls]

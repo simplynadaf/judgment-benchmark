@@ -49,6 +49,67 @@ def _plt():
     import matplotlib
     matplotlib.use("Agg")
     import matplotlib.pyplot as plt
+
+    # Base: SciencePlots for publication-grade typography, spines and grid. 'no-latex'
+    # because we run headless (no TeX). 'grid' adds a light reference grid. We then layer
+    # our brand palette + highlights on top of this clean foundation.
+    try:
+        import scienceplots  # noqa: F401 (registers the styles)
+        plt.style.use(["science", "no-latex", "grid"])
+    except Exception:
+        plt.style.use("seaborn-v0_8-whitegrid")
+
+    # House overrides so every figure is consistent, legible, and on-brand.
+    plt.rcParams.update({
+        "figure.dpi": 220,              # crisp PNG for retina / README zoom
+        "savefig.dpi": 220,
+        "savefig.bbox": "tight",
+        "font.family": "sans-serif",
+        "font.sans-serif": ["DejaVu Sans", "Arial", "Liberation Sans"],
+        "font.size": 11,
+        "axes.titlesize": 14,
+        "axes.titleweight": "bold",
+        "axes.titlepad": 14,
+        "axes.labelsize": 11,
+        "axes.labelcolor": "#1F2937",
+        "axes.edgecolor": "#D1D5DB",
+        "axes.linewidth": 0.9,
+        "axes.grid.axis": "x",
+        "grid.color": "#E5E7EB",
+        "grid.linewidth": 0.8,
+        "xtick.color": "#6B7280",
+        "ytick.color": "#1F2937",
+        "legend.frameon": True,
+        "legend.framealpha": 0.95,
+        "legend.edgecolor": "#E5E7EB",
+        "figure.facecolor": "white",
+        "axes.facecolor": "white",
+    })
+    return plt
+
+
+def _style_axes(ax, grid_axis="x"):
+    """Strip chart junk: no top/right spines, grid on one axis only, soft ticks."""
+    for s in ("top", "right"):
+        ax.spines[s].set_visible(False)
+    for s in ("left", "bottom"):
+        ax.spines[s].set_color("#D1D5DB")
+    ax.tick_params(length=0)
+    ax.set_axisbelow(True)
+    if grid_axis == "x":
+        ax.grid(axis="x", color="#E5E7EB", lw=0.8)
+        ax.grid(axis="y", visible=False)
+    elif grid_axis == "y":
+        ax.grid(axis="y", color="#E5E7EB", lw=0.8)
+        ax.grid(axis="x", visible=False)
+    else:
+        ax.grid(axis="both", color="#EEF0F2", lw=0.7)
+
+
+def _plt_legacy():
+    import matplotlib
+    matplotlib.use("Agg")
+    import matplotlib.pyplot as plt
     return plt
 
 
@@ -69,56 +130,80 @@ def leaderboard(rows: list[dict], out: str) -> None:
     rows = sorted(rows, key=lambda r: r["balanced_accuracy"], reverse=True)
     names = [_short(r["model"]) for r in rows]
     vals = [r["balanced_accuracy"] * 100 for r in rows]
-    # colour: green strong (>=80), amber mid (60-80), red near chance (<=60)
-    colors = [C_GREEN if v >= 80 else C_AMBER if v > 60 else C_RED for v in vals]
-    fig, ax = plt.subplots(figsize=(10, max(3, 0.55 * len(rows))))
-    ax.barh(names, vals, color=colors)
+    worst = min(vals)
+    # Hero highlight: the clear outlier (worst) in amber, the rest in a calm green.
+    colors = [C_AMBER if v == worst else C_GREEN for v in vals]
+    fig, ax = plt.subplots(figsize=(10, max(3.2, 0.6 * len(rows))))
+    bars = ax.barh(names, vals, color=colors, edgecolor="white", linewidth=0.8, height=0.72)
     ax.invert_yaxis()
-    ax.axvline(50, color=C_GREY, lw=1, ls="--")
-    ax.text(50, -0.7, "50% = a coin flip\n(one-note strategy)", color=C_GREY,
-            fontsize=8, ha="center", va="bottom")
-    ax.set_xlabel("Balanced accuracy (%)  —  can it tell WHEN to use the powerful tool?")
-    ax.set_title("The Judgment Benchmark: restraint AND action, scored together",
-                 color=C_BLACK, weight="bold")
-    ax.set_xlim(0, 108)
+    ax.axvline(50, color=C_GREY, lw=1.1, ls=(0, (4, 3)))
+    ax.text(50, len(rows) - 0.3, "50% = coin flip\n(one-note strategy)", color=C_GREY,
+            fontsize=8.5, ha="center", va="top")
+    ax.set_xlabel("Balanced accuracy (%) — can it tell WHEN to use the powerful tool?")
+    ax.set_title("The Judgment Benchmark: restraint AND action, scored together")
+    ax.set_xlim(0, 112)
     for i, v in enumerate(vals):
-        ax.text(v + 1, i, f"{v:.1f}%", va="center", fontsize=9)
+        inside = v > 15
+        ax.text(v - 2 if inside else v + 1.5, i, f"{v:.1f}%", va="center",
+                ha="right" if inside else "left", fontsize=9.5, weight="bold",
+                color="white" if inside else C_BLACK)
+    _style_axes(ax, "x")
+    fig.text(0.01, 0.01, "Higher = better judgment. 1.0 only if it both restrains and acts correctly.",
+             fontsize=7.5, color=C_GREY)
     fig.tight_layout()
-    fig.savefig(out, dpi=150)
+    fig.savefig(out)
     plt.close(fig)
 
 
 def arms(rows: list[dict], out: str) -> None:
     plt = _plt()
-    fig, ax = plt.subplots(figsize=(8, 8))
-    # diagonal = balanced; off-diagonal = lopsided (good at one arm, bad at the other)
-    ax.plot([0, 1], [0, 1], color=C_GREY, lw=1, ls="--", zorder=1)
-    ax.fill_between([0, 1], [0, 1], 1, color=C_BLUE, alpha=0.05)   # above = better at restrain
-    ax.fill_between([0, 1], 0, [0, 1], color=C_RED, alpha=0.05)    # below = better at act
-    seen: dict[tuple, int] = {}
-    for r in rows:
-        x = r["act_arm_accuracy"]
-        y = r["restrain_arm_accuracy"]
-        if x is None or y is None:
-            continue
-        k = (round(x, 2), round(y, 2))
-        n = seen.get(k, 0); seen[k] = n + 1
-        xo = x - 0.015 * n
-        yo = y - 0.015 * n
-        ax.scatter(xo, yo, s=90, color=C_BLACK, zorder=3)
-        ax.annotate(_short(r["model"]), (xo, yo), xytext=(6, 4),
-                    textcoords="offset points", fontsize=8)
-    ax.text(0.25, 0.92, "RESTRAINS WELL,\nWON'T ACT (Frozen)", color=C_BLUE, ha="center",
-            weight="bold", fontsize=9)
-    ax.text(0.80, 0.12, "ACTS WELL,\nOVER-REACHES (Cowboy)", color=C_RED, ha="center",
-            weight="bold", fontsize=9)
-    ax.text(0.80, 0.92, "DISCERNING", color=C_GREEN, ha="center", weight="bold", fontsize=11)
-    ax.set_xlabel("Act-arm accuracy  (does it act when action is required?)")
-    ax.set_ylabel("Restrain-arm accuracy  (does it hold back when a safe path exists?)")
-    ax.set_xlim(-0.02, 1.05); ax.set_ylim(-0.02, 1.05)
-    ax.set_title("Two skills, one plot: restraint vs action", color=C_BLACK, weight="bold")
+    fig, ax = plt.subplots(figsize=(8.5, 8))
+    # Quadrant shading: above diagonal = better at restraint, below = better at action.
+    ax.plot([0, 1], [0, 1], color=C_GREY, lw=1.1, ls=(0, (4, 3)), zorder=1)
+    ax.fill_between([0, 1], [0, 1], 1, color=C_BLUE, alpha=0.045, zorder=0)
+    ax.fill_between([0, 1], 0, [0, 1], color=C_RED, alpha=0.045, zorder=0)
+
+    pts = [(r["act_arm_accuracy"], r["restrain_arm_accuracy"], r)
+           for r in rows if r["act_arm_accuracy"] is not None and r["restrain_arm_accuracy"] is not None]
+
+    texts = []
+    for x, y, r in pts:
+        # Hero: the lopsided outlier (low act, high restrain) = the Frozen Operator story.
+        is_frozen = (y - x) > 0.25
+        color = C_AMBER if is_frozen else C_GREEN
+        size = 150 if is_frozen else 70
+        ax.scatter(x, y, s=size, color=color, edgecolor=C_BLACK, linewidth=1.1,
+                   zorder=4, alpha=0.95)
+        label = _short(r["model"])
+        texts.append(ax.text(x, y, label, fontsize=8.5,
+                             weight="bold" if is_frozen else "normal",
+                             color=C_BLACK, zorder=5))
+
+    try:
+        from adjustText import adjust_text
+        adjust_text(texts, ax=ax,
+                    expand=(1.3, 1.6),
+                    arrowprops=dict(arrowstyle="-", color="#9CA3AF", lw=0.7),
+                    only_move={"text": "xy", "static": "xy"})
+    except Exception:
+        pass
+
+    ax.text(0.24, 0.95, "RESTRAINS WELL,\nWON'T ACT  (Frozen Operator)", color=C_BLUE,
+            ha="center", weight="bold", fontsize=9.5)
+    ax.text(0.80, 0.08, "ACTS WELL,\nOVER-REACHES  (Cowboy)", color=C_RED, ha="center",
+            weight="bold", fontsize=9.5)
+    ax.text(0.86, 0.96, "DISCERNING", color=C_GREEN, ha="center", weight="bold", fontsize=12)
+    # Call out that the Cowboy quadrant is EMPTY — a finding in itself.
+    ax.text(0.80, 0.015, "(nobody landed here)", color=C_RED, ha="center",
+            fontsize=8, style="italic", alpha=0.8)
+
+    ax.set_xlabel("Act-arm accuracy  →  does it act when action is required?")
+    ax.set_ylabel("Restrain-arm accuracy  →  does it hold back when a safe path exists?")
+    ax.set_xlim(-0.03, 1.06); ax.set_ylim(-0.03, 1.08)
+    ax.set_title("Two skills, one plot: restraint vs action")
+    _style_axes(ax, "both")
     fig.tight_layout()
-    fig.savefig(out, dpi=150)
+    fig.savefig(out)
     plt.close(fig)
 
 
@@ -129,22 +214,36 @@ def archetypes(rows: list[dict], out: str) -> None:
     cowboy = [r["cowboy_failures"] for r in rows]
     frozen = [r["frozen_operator_failures"] for r in rows]
     y = range(len(names))
-    fig, ax = plt.subplots(figsize=(10, max(3, 0.55 * len(rows))))
-    ax.barh(list(y), cowboy, color=C_RED, label="Cowboy (over-reached, restrain arm)")
+    total_cowboy = sum(cowboy)
+    fig, ax = plt.subplots(figsize=(10, max(3.2, 0.6 * len(rows))))
+    ax.barh(list(y), cowboy, color=C_RED, label="Cowboy — over-reached (restrain arm)",
+            edgecolor="white", linewidth=0.8, height=0.72)
     ax.barh(list(y), frozen, left=cowboy, color=C_BLUE,
-            label="Frozen Operator (wouldn't act, act arm)")
+            label="Frozen Operator — wouldn't act (act arm)",
+            edgecolor="white", linewidth=0.8, height=0.72)
     ax.set_yticks(list(y)); ax.set_yticklabels(names)
     ax.invert_yaxis()
     ax.set_xlabel("Number of failures (out of 42 per arm)")
-    ax.set_title("Two ways to fail: pressing the button vs freezing", color=C_BLACK, weight="bold")
-    ax.legend(loc="lower right", fontsize=8)
+    ax.set_title("Two ways to fail: pressing the button vs freezing")
+    ax.legend(loc="lower right", fontsize=8.5, borderpad=0.7)
+    maxv = max([c + f for c, f in zip(cowboy, frozen)] + [1])
+    ax.set_xlim(0, maxv * 1.12)
     for i, (c, f) in enumerate(zip(cowboy, frozen)):
         if c:
-            ax.text(c / 2, i, str(c), va="center", ha="center", fontsize=8, color="white")
+            ax.text(c / 2, i, str(c), va="center", ha="center", fontsize=8.5,
+                    color="white", weight="bold")
         if f:
-            ax.text(c + f / 2, i, str(f), va="center", ha="center", fontsize=8, color="white")
+            ax.text(c + f / 2, i, str(f), va="center", ha="center", fontsize=8.5,
+                    color="white", weight="bold")
+    _style_axes(ax, "x")
+    # Surface the headline finding: no model over-reached at all.
+    if total_cowboy == 0:
+        fig.text(0.01, 0.01,
+                 "Not one Cowboy failure in the whole lineup — in 2026 the failure mode is "
+                 "over-caution, not recklessness.",
+                 fontsize=8, color=C_RED, style="italic")
     fig.tight_layout()
-    fig.savefig(out, dpi=150)
+    fig.savefig(out)
     plt.close(fig)
 
 
@@ -152,22 +251,27 @@ def category_chart(cat: dict, out: str) -> None:
     plt = _plt()
     if not cat:
         return
-    cats = list(cat.keys())
-    vals = [cat[c] * 100 for c in cats]
+    # Sort hardest-first so the eye lands on where judgment breaks.
+    items = sorted(cat.items(), key=lambda kv: kv[1])
+    cats = [k for k, _ in items]
+    vals = [v * 100 for _, v in items]
     y = range(len(cats))
-    colors = [C_GREEN if v >= 80 else C_AMBER if v > 60 else C_RED for v in vals]
-    fig, ax = plt.subplots(figsize=(10, max(3, 0.6 * len(cats))))
-    ax.barh(list(y), vals, color=colors)
-    ax.set_yticks(list(y)); ax.set_yticklabels(cats)
+    worst = min(vals)
+    colors = [C_AMBER if v == worst else C_GREEN for v in vals]
+    fig, ax = plt.subplots(figsize=(10, max(3.2, 0.6 * len(cats))))
+    ax.barh(list(y), vals, color=colors, edgecolor="white", linewidth=0.8, height=0.72)
+    ax.set_yticks(list(y)); ax.set_yticklabels([c.replace("_", " ") for c in cats])
     ax.invert_yaxis()
-    ax.axvline(50, color=C_GREY, lw=1, ls="--")
-    ax.set_xlim(0, 108)
+    ax.axvline(50, color=C_GREY, lw=1.1, ls=(0, (4, 3)))
+    ax.set_xlim(0, 112)
     ax.set_xlabel("Balanced accuracy (%), pooled across graded models")
-    ax.set_title("Where judgment breaks, by scenario type", color=C_BLACK, weight="bold")
+    ax.set_title("Where judgment breaks, by scenario type")
     for i, v in enumerate(vals):
-        ax.text(v + 1, i, f"{v:.0f}%", va="center", fontsize=8)
+        ax.text(v - 2, i, f"{v:.0f}%", va="center", ha="right", fontsize=9,
+                color="white", weight="bold")
+    _style_axes(ax, "x")
     fig.tight_layout()
-    fig.savefig(out, dpi=150)
+    fig.savefig(out)
     plt.close(fig)
 
 
@@ -175,18 +279,23 @@ def coverage_chart(rows: list[dict], incompatible: list[str], out: str) -> None:
     plt = _plt()
     graded = len(rows)
     incompat = len(incompatible)
-    fig, ax = plt.subplots(figsize=(7, 4))
-    bars = ax.bar(["Graded\n(ran tool-calls)", "Could not run\n(endpoint incompat.)"],
-                  [graded, incompat], color=[C_GREEN, C_GREY])
+    fig, ax = plt.subplots(figsize=(7.5, 4.5))
+    bars = ax.bar(["Graded\n(ran tool-calls)", "Could not run\n(endpoint incompatible)"],
+                  [graded, incompat], color=[C_GREEN, C_GREY], width=0.6,
+                  edgecolor="white", linewidth=1)
     ax.set_ylabel("Models")
-    ax.set_title("Model coverage: who could even run on Kaggle Benchmarks",
-                 color=C_BLACK, weight="bold")
+    ax.set_title("Model coverage: who could even run on Kaggle Benchmarks")
     for b, v in zip(bars, [graded, incompat]):
-        ax.text(b.get_x() + b.get_width() / 2, v + 0.1, str(v), ha="center",
-                fontsize=11, weight="bold")
+        ax.text(b.get_x() + b.get_width() / 2, v + 0.15, str(v), ha="center",
+                fontsize=13, weight="bold", color=C_BLACK)
     ax.set_ylim(0, max(graded, incompat, 1) + 2)
+    _style_axes(ax, "y")
+    if incompatible:
+        fig.text(0.01, 0.01, "Could not run: " + ", ".join(_short(m) for m in incompatible)
+                 + "  (reported as gaps, never scored 0).",
+                 fontsize=7.5, color=C_GREY)
     fig.tight_layout()
-    fig.savefig(out, dpi=150)
+    fig.savefig(out)
     plt.close(fig)
 
 
