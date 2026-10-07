@@ -16,7 +16,7 @@ Measured together, so neither reflex can fake it.
 [![Tests](https://img.shields.io/badge/tests-12%20passing-16A34A.svg?logo=pytest&logoColor=white)](tests/)
 [![Scenarios](https://img.shields.io/badge/scenarios-84%20(42%20restrain%20%2B%2042%20act)-6E56CF.svg)](#-what-it-benchmarks)
 [![Models graded](https://img.shields.io/badge/models%20graded-9-F59E0B.svg)](#-results)
-[![Reproducible](https://img.shields.io/badge/scenarios-seeded%20%26%20reproducible-0A0A0A.svg)](#-what-it-benchmarks)
+[![Reproducible](https://img.shields.io/badge/seeded-reproducible-0A0A0A.svg)](#-what-it-benchmarks)
 
 </div>
 
