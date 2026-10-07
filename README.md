@@ -291,11 +291,17 @@ Apache License 2.0. See [`LICENSE`](LICENSE).
 
 ## 👤 Author
 
-**Sarvar Nadaf** | Cloud Architect | Cloud, AI Infrastructure & DevOps
+<div align="center">
 
-[Portfolio](https://sarvarnadaf.com) · [LinkedIn](https://www.linkedin.com/in/sarvar04/) ·
-[Dev.to](https://dev.to/sarvar_04) · [GitHub](https://github.com/simplynadaf) ·
-[YouTube](https://www.youtube.com/@sarvar-nadaf)
+**Sarvar Nadaf** · Cloud Architect · Cloud, AI Infrastructure & DevOps
+
+[![Portfolio](https://img.shields.io/badge/Portfolio-sarvarnadaf.com-0A0A0A?style=for-the-badge&logo=aboutdotme&logoColor=white)](https://sarvarnadaf.com)
+[![LinkedIn](https://img.shields.io/badge/LinkedIn-0A66C2?style=for-the-badge&logo=linkedin&logoColor=white)](https://www.linkedin.com/in/sarvar04/)
+[![Dev.to](https://img.shields.io/badge/Dev.to-0A0A0A?style=for-the-badge&logo=devdotto&logoColor=white)](https://dev.to/sarvar_04)
+[![GitHub](https://img.shields.io/badge/GitHub-181717?style=for-the-badge&logo=github&logoColor=white)](https://github.com/simplynadaf)
+[![YouTube](https://img.shields.io/badge/YouTube-FF0000?style=for-the-badge&logo=youtube&logoColor=white)](https://www.youtube.com/@sarvar-nadaf)
+
+</div>
 
 Built for the [Kaggle Benchmarking Challenge](https://dev.to/challenges/kaggle-2026-09-23)
 (Sep-Oct 2026) with AI coding assistance, which the challenge rules allow. The benchmark design,
