@@ -10,13 +10,29 @@ Measured together, so neither reflex can fake it.
 [![CI](https://github.com/simplynadaf/judgment-benchmark/actions/workflows/ci.yml/badge.svg)](https://github.com/simplynadaf/judgment-benchmark/actions/workflows/ci.yml)
 [![License: Apache 2.0](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](LICENSE)
 [![Kaggle Benchmark](https://img.shields.io/badge/Kaggle-Benchmark-20BEFF.svg)](https://www.kaggle.com/benchmarks/tasks/sarvarnadaf/judgment)
-[![No LLM Judge](https://img.shields.io/badge/grading-deterministic-16A34A.svg)](#how-grading-works-no-llm-judge)
+[![No LLM Judge](https://img.shields.io/badge/grading-deterministic-16A34A.svg)](#-how-grading-works-no-llm-judge)
 
 </div>
 
 ---
 
-## The one-paragraph version
+## 📋 Contents
+
+- [The one-paragraph version](#-the-one-paragraph-version)
+- [Why a single-arm safety test lies](#-why-a-single-arm-safety-test-lies)
+- [What it benchmarks](#-what-it-benchmarks)
+- [The metric: balanced accuracy](#-the-metric-balanced-accuracy)
+- [How grading works (no LLM judge)](#-how-grading-works-no-llm-judge)
+- [Proving the metric does not lie (calibration)](#-proving-the-metric-does-not-lie-calibration)
+- [Results](#-results)
+- [Run it yourself](#-run-it-yourself)
+- [Add your own model to the leaderboard](#-add-your-own-model-to-the-leaderboard)
+- [FAQ](#-faq)
+- [Citation](#-citation)
+
+---
+
+## 💡 The one-paragraph version
 
 Most agent benchmarks ask *can the model do the task?* This one asks the harder operational
 question: **when you hand an agent real tools, does it know which situations call for the
@@ -28,7 +44,7 @@ that always reaches for the big hammer both land at **50%**, a coin flip. Only a
 
 ---
 
-## Why a single-arm safety test lies
+## 🎭 Why a single-arm safety test lies
 
 Give an agent a safe tool and a destructive tool for the same goal, and measuring "did it avoid
 the destructive one" looks like a safety metric. It isn't. **An agent that refuses to do
@@ -46,7 +62,7 @@ So judgment is two skills, and this benchmark refuses to let a model win on one:
 
 ---
 
-## What it benchmarks
+## 🧪 What it benchmarks
 
 **84 scenarios**, generated deterministically from a fixed seed: **42 RESTRAIN + 42 ACT**,
 evenly across six cloud/DevOps operator categories. Every scenario is an honest, ordinary
@@ -67,7 +83,7 @@ category so the *same* powerful tool is now the correct answer, given explicit a
 
 ---
 
-## The metric: balanced accuracy
+## 📐 The metric: balanced accuracy
 
 $$\text{balanced accuracy} = \tfrac{1}{2}\left(\text{restrain-arm accuracy} + \text{act-arm accuracy}\right)$$
 
@@ -80,7 +96,7 @@ number cannot be won by a reflex.
 
 ---
 
-## How grading works (no LLM judge)
+## ⚙️ How grading works (no LLM judge)
 
 Every tool is a simulated stub. Calling it touches no real infrastructure; it records the call
 in a per-scenario **ledger** and returns a plausible result so the agent's tool loop continues.
@@ -98,7 +114,7 @@ trust.
 
 ---
 
-## Proving the metric does not lie (calibration)
+## 🔬 Proving the metric does not lie (calibration)
 
 A trustworthy benchmark must demonstrably separate known-good from known-bad behaviour. Four
 scripted, non-model reference agents run through the exact same grader (`make calibration`):
@@ -115,7 +131,7 @@ the two-arm design buys, and it is asserted in CI on every push.
 
 ---
 
-## Results
+## 📊 Results
 
 First public run: **9 models graded** across Anthropic, Google and OpenAI (84 scenarios each),
 plus 2 reported as coverage gaps. The headline: three models scored a perfect **1.00**
@@ -123,6 +139,30 @@ plus 2 reported as coverage gaps. The headline: three models scored a perfect **
 Opus 5, came last at 0.62** by freezing on 32 of 42 jobs it was authorized to do. **Zero models
 over-reached** to a destructive tool on any scenario. Charts regenerate from
 `results/results.json` via `make charts`.
+
+| Model | Lab | Balanced acc | RESTRAIN arm | ACT arm | Frozen (ACT) |
+|-------|-----|:--:|:--:|:--:|:--:|
+| Claude Haiku 4.5 | Anthropic | **1.00** | 1.00 | 1.00 | 0 |
+| Claude Sonnet 4.5 | Anthropic | **1.00** | 1.00 | 1.00 | 0 |
+| Gemini 3.7 Flash | Google | **1.00** | 1.00 | 1.00 | 0 |
+| Gemini 3.1 Pro | Google | 0.99 | 0.98 | 1.00 | 0 |
+| GPT-5.4 nano | OpenAI | 0.99 | 0.98 | 1.00 | 0 |
+| gpt-oss-20b | OpenAI | 0.99 | 0.98 | 1.00 | 0 |
+| Gemini 3.5 Flash-Lite | Google | 0.98 | 1.00 | 0.95 | 2 |
+| Gemini 3.5 Flash | Google | 0.93 | 0.90 | 0.95 | 2 |
+| Claude Opus 5 | Anthropic | **0.62** | 1.00 | 0.24 | 32 |
+
+A note on "zero over-reach": no model ever reached for the destructive tool (zero Cowboys), but a
+few restrain-arm points are still missing. Gemini 3.1 Pro, GPT-5.4 nano and gpt-oss-20b each
+missed one restrain scenario, and Gemini 3.5 Flash missed four, without over-reaching. Those are a
+third, milder failure the grader labels `off`: the model neither grabbed the destructive tool nor
+completed the safe task. That counts against the restrain arm but is not a destroy-button press,
+and the two are kept separate on purpose.
+
+**Coverage gaps (could not run, never scored 0):** `deepseek-r1-0528` returns "Tool calling is not
+supported by this model," and `gpt-6-astra` rejects function tools combined with `reasoning_effort`
+on Kaggle's chat-completions endpoint (it requires the newer responses endpoint). Both are reported
+as gaps, not failures.
 
 ![Leaderboard](docs/charts/leaderboard.png)
 ![Restraint vs action](docs/charts/arms.png)
@@ -133,7 +173,7 @@ over-reached** to a destructive tool on any scenario. Charts regenerate from
 
 ---
 
-## Repo layout
+## 📁 Repo layout
 
 ```
 judgment-benchmark/
@@ -148,26 +188,50 @@ judgment-benchmark/
 ├── docs/
 │   ├── RUN-ON-KAGGLE.md  # the ~30-min hands-on run guide
 │   └── charts/           # generated figures
+├── .github/workflows/    # CI: tests + calibration on py3.10/3.11/3.12
+├── conftest.py
+├── CONTRIBUTING.md
+├── LICENSE               # Apache-2.0
 ├── Makefile              # make test / calibration / scenarios / charts
 └── pyproject.toml
 ```
 
 ---
 
-## Run it yourself
+## 🚀 Run it yourself
+
+Requires **Python 3.10+** (CI runs 3.10, 3.11 and 3.12; the Kaggle run used 3.12).
 
 ```bash
+git clone https://github.com/simplynadaf/judgment-benchmark.git
+cd judgment-benchmark
 pip install -e ".[test,analysis]"
+
 make test            # determinism + fairness + calibration (12 tests)
 make calibration     # see the 1.0 / 0.50 / 0.50 / 0.24 separation
 make scenarios       # inspect the 84 two-arm scenarios
+make charts          # regenerate figures from results/results.json
 ```
 
 On Kaggle Benchmarks, see [`docs/RUN-ON-KAGGLE.md`](docs/RUN-ON-KAGGLE.md).
 
 ---
 
-## FAQ
+## 🏆 Add your own model to the leaderboard
+
+The benchmark is public and runnable. Add any model with one command and the public leaderboard
+updates:
+
+```bash
+kaggle b t run judgment -m <model-slug> --wait
+```
+
+See the current standings on the
+[public Kaggle benchmark](https://www.kaggle.com/benchmarks/tasks/sarvarnadaf/judgment).
+
+---
+
+## ❓ FAQ
 
 <details>
 <summary><b>Isn't "balanced accuracy" just restraint rate with extra steps?</b></summary>
@@ -203,7 +267,29 @@ which is exactly what the two arms encode.
 
 ---
 
-## Author
+## 🤝 Contributing
+
+Issues and PRs welcome, especially new scenario categories and harder cases where the destructive
+tool is the *tempting* shortcut. See [`CONTRIBUTING.md`](CONTRIBUTING.md).
+
+## 📄 License
+
+Apache License 2.0. See [`LICENSE`](LICENSE).
+
+## 📚 Citation
+
+```bibtex
+@software{nadaf_judgment_benchmark_2026,
+  author  = {Sarvar Nadaf},
+  title   = {The Judgment Benchmark: a two-arm test of tool-use judgment in AI agents},
+  year    = {2026},
+  url      = {https://github.com/simplynadaf/judgment-benchmark}
+}
+```
+
+---
+
+## 👤 Author
 
 **Sarvar Nadaf** | Cloud Architect | Cloud, AI Infrastructure & DevOps
 
