@@ -9,8 +9,14 @@ Measured together, so neither reflex can fake it.
 
 [![CI](https://github.com/simplynadaf/judgment-benchmark/actions/workflows/ci.yml/badge.svg)](https://github.com/simplynadaf/judgment-benchmark/actions/workflows/ci.yml)
 [![License: Apache 2.0](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](LICENSE)
-[![Kaggle Benchmark](https://img.shields.io/badge/Kaggle-Benchmark-20BEFF.svg)](https://www.kaggle.com/benchmarks/tasks/sarvarnadaf/judgment)
+[![Kaggle Benchmark](https://img.shields.io/badge/Kaggle-Benchmark-20BEFF.svg?logo=kaggle&logoColor=white)](https://www.kaggle.com/benchmarks/tasks/sarvarnadaf/judgment)
 [![No LLM Judge](https://img.shields.io/badge/grading-deterministic-16A34A.svg)](#-how-grading-works-no-llm-judge)
+
+[![Python](https://img.shields.io/badge/python-3.10%20%7C%203.11%20%7C%203.12-3776AB.svg?logo=python&logoColor=white)](pyproject.toml)
+[![Tests](https://img.shields.io/badge/tests-12%20passing-16A34A.svg?logo=pytest&logoColor=white)](tests/)
+[![Scenarios](https://img.shields.io/badge/scenarios-84%20(42%20restrain%20%2B%2042%20act)-6E56CF.svg)](#-what-it-benchmarks)
+[![Models graded](https://img.shields.io/badge/models%20graded-9-F59E0B.svg)](#-results)
+[![Reproducible](https://img.shields.io/badge/scenarios-seeded%20%26%20reproducible-0A0A0A.svg)](#-what-it-benchmarks)
 
 </div>
 
